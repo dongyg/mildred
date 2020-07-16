@@ -1,0 +1,7 @@
+web.py==0.51
+pyyaml==5.3.1
+rsa==4.0
+image==1.5.32
+qrcode==6.1
+docker==4.2.0
+docker-compose==1.26.0

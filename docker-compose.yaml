@@ -1,0 +1,11 @@
+version: '2'
+services:
+  mildred:
+    image: dongyg/mildred
+    container_name: mildred
+    ports:
+      - 8017:8017
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/mildred
+    command: python main.wsgi 8017
