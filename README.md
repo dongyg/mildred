@@ -1,7 +1,5 @@
 # Mildred
 
-![Mildred](./code/static/mildred256.png)
-
 Mildred is a tool for managing your docker servers from your iOS devices. It includes an [iOS App](https://apps.apple.com/us/app/id1522800022) and a server-side.
 
 ## Why a server-side
