@@ -678,5 +678,5 @@ class CtrlStaticFiles:
 class CtrlViewController(object):
     def GET(self):
         web.header("Content-Type", "text/json")
-        return formator.json_string({'errmsg': 'API not exists. Please upgrade Mildred Container to the newest version.'})
+        return formator.json_string({'errmsg': 'API not exists. Please upgrade your server-side to the newest version.'})
 
