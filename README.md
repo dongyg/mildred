@@ -27,9 +27,17 @@ Use the built image [`dongyg/mildred`](https://hub.docker.com/r/dongyg/mildred) 
 
 If you want to build the docker image by yourself, you can create your own `docker-compose.yaml` based-on this file. Certainly, you can also modify the `Dockerfile` as you want.
 
-### Upgrade
+### binding
 
-#### Upgrade the Image dongyg/mildred
+Binding will be unavailable after the first device bound. You could turn it on in the app or execute the command below on your docker server.
+
+```bash
+docker exec -it mildred python configuration.py --binding-on
+```
+
+## Upgrade
+
+### Upgrade the Image dongyg/mildred
 
 ```bash
 # Remove the container and the image first
@@ -41,7 +49,7 @@ docker image rm dongyg/mildred
 cd /your/path/mildred && docker-compose up -d
 ```
 
-#### Just code
+### Just code
 
 ```bash
 cd /your/path/mildred
