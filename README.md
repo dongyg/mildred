@@ -27,6 +27,28 @@ Use the built image [`dongyg/mildred`](https://hub.docker.com/r/dongyg/mildred) 
 
 If you want to build the docker image by yourself, you can create your own `docker-compose.yaml` based-on this file. Certainly, you can also modify the `Dockerfile` as you want.
 
+### Upgrade
+
+#### Upgrade the Image dongyg/mildred
+
+```bash
+# Remove the container and the image first
+docker stop mildred
+docker container rm mildred
+docker image rm mildred
+
+# Recreate and start the container
+cd /your/path/mildred && docker-compose up -d
+```
+
+#### Just code
+
+```bash
+cd /your/path/mildred
+git pull
+docker restart mildred
+```
+
 
 ## Expose via Nginx
 
