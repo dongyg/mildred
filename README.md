@@ -35,7 +35,7 @@ If you want to build the docker image by yourself, you can create your own `dock
 # Remove the container and the image first
 docker stop mildred
 docker container rm mildred
-docker image rm mildred
+docker image rm dongyg/mildred
 
 # Recreate and start the container
 cd /your/path/mildred && docker-compose up -d
