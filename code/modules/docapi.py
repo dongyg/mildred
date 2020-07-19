@@ -515,7 +515,7 @@ def needAddChunkedHeader():
     port2 = host[1] if len(host)==2 else '80'
     if server.find('Cheroot')>=0:
         if variant.inside_container:
-            cobj = get_selfcontainer()
+            cobj = mcompose.get_selfcontainer()
             if port2 in [x['PublicPort'] for x in cobj['Ports'] if 'PublicPort' in x]:
                 return True
             return False
