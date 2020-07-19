@@ -61,10 +61,13 @@ def get_mac_address():
 def get_selfcontainer():
     macadr = get_mac_address()
     for cobj in dclient.api.containers():
+        cmac = ''
         if cobj['HostConfig']['NetworkMode'] in cobj['NetworkSettings']['Networks']:
             cmac = cobj['NetworkSettings']['Networks'][cobj['HostConfig']['NetworkMode']]['MacAddress']
-            if cmac and cmac==macadr:
-                return cobj
+        elif 'bridge' in cobj['NetworkSettings']['Networks']:
+            cmac = cobj['NetworkSettings']['Networks']['bridge']['MacAddress']
+        if cmac and cmac==macadr:
+            return cobj
     return {}
 
 def list_files(folder):
