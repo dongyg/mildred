@@ -283,9 +283,9 @@ def load_alerts():
     llg = groupby([x for x in m if x.ALTYPE==1], itemgetter('CNAME'))
     lcm = groupby([x for x in m if x.ALTYPE in (2,3)], itemgetter('CNAME'))
     lph = groupby([x for x in m if x.ALTYPE in (4,5)], itemgetter('CNAME'))
-    web.config.vars['alertlg'] = dict([(cname, list(val)) for cname, val in llg])
-    web.config.vars['alertcm'] = dict([(cname, list(val)) for cname, val in lcm])
-    web.config.vars['alertph'] = dict([(cname, list(val)) for cname, val in lph])
+    web.config.vars['alertlg'] = dict([(cname, list(val)) for cname, val in llg if mdocker.exists_container(cname)])
+    web.config.vars['alertcm'] = dict([(cname, list(val)) for cname, val in lcm if mdocker.exists_container(cname)])
+    web.config.vars['alertph'] = dict([(cname, list(val)) for cname, val in lph if mdocker.exists_container(cname)])
 
 def insert_stats(cname, hdat):
     if not dbsl: return
@@ -510,16 +510,23 @@ def add_compose(fpath):
     if not os.path.isfile(realpath):
         return {'errmsg': 'File %s not exists'%fpath}
     folder = os.path.split(os.path.abspath(realpath))[0]
-    t = dbsl.transaction()
-    try:
-        dbsl.insert("DM_COMPOSE", ALIAS=os.path.basename(os.path.split(fpath)[0]), FILEPATH=fpath, FOLDER=folder)
-    except Exception as e:
-        t.rollback()
-        traceback.print_exc()
-        return {"errmsg":e}
+    if not web.listget(dbsl.select("DM_COMPOSE", vars=locals(), where="FILEPATH=$fpath and FOLDER=$folder").list(),0):
+        if fpath.lower().endswith(('yaml', 'yml')):
+            alias = os.path.basename(os.path.split(fpath)[0])
+        else:
+            alias = os.path.basename(fpath)
+        t = dbsl.transaction()
+        try:
+            dbsl.insert("DM_COMPOSE", ALIAS=alias, FILEPATH=fpath, FOLDER=folder)
+        except Exception as e:
+            t.rollback()
+            traceback.print_exc()
+            return {"errmsg":e}
+        else:
+            t.commit()
+            return {}
     else:
-        t.commit()
-        return {}
+        return {"errmsg":"%s already exists"%fpath}
 
 def get_compose(cmpsid):
     if not dbsl: return

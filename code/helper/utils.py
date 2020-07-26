@@ -83,6 +83,7 @@ def check_http(url, timeout=15):
         return 555, str(e)
 
 def prefixStorageDir(folder):
+    if folder.startswith('../storage'): return folder
     if not os.path.isdir('../storage'):
         os.mkdir('../storage')
     if folder.startswith('/'):

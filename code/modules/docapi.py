@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
+import stat
 from config import *
 
 from . import mdocker, mcompose, mdb
@@ -48,6 +49,7 @@ urls_rest = (
     '/compose/(.+)/restart',         'CtrlComposeRestart',
     '/compose/(.+)/stop',            'CtrlComposeStop',
     '/compose/(.+)/remove',          'CtrlComposeRemove',
+    '/compose/(.+)/shell',           'CtrlComposeShell',
     '/static/.*',                    'CtrlStaticFiles',
     '/.*',          'CtrlViewController',
 )
@@ -223,6 +225,7 @@ class CtrlServerStatSwitch:
         SignatureHooker.checkSignature(self)
         mdb.set_syskey('ENABLE_STAT', 1)
         variant['enable_stat'] = '1'
+        mdb.load_alerts()
         variant.deamon_thread = threading.Thread(target=mdocker.stat_daemon, args=(), daemon=True)
         variant.deamon_thread.start()
         return formator.json_string({})
@@ -469,8 +472,9 @@ class CtrlComposeList:
     def GET(self):
         SignatureHooker.checkSignature(self)
         params = web.input()
-        cmpsinfo = mcompose.compose_info()
-        retval = {'body': mdb.list_compose(), 'cmpsver':cmpsinfo[0], 'cmpstip':cmpsinfo[1]}
+        retlst = mdb.list_compose()
+        cmpsinfo = mcompose.compose_info() if not retlst else ['', '']
+        retval = {'body': retlst, 'cmpsver':cmpsinfo[0], 'cmpstip':cmpsinfo[1]}
         return formator.json_string(retval)
     def POST(self):
         SignatureHooker.checkSignature(self)
@@ -495,6 +499,7 @@ class CtrlFileList:
         retval = mcompose.list_files(params.folder)
         return formator.json_string({'body': retval})
 
+########################################
 class CtrlComposeInfo:
     def GET(self, cmpsid):
         SignatureHooker.checkSignature(self)
@@ -503,11 +508,15 @@ class CtrlComposeInfo:
         if not cpobj:
             return formator.json_string({'errmsg': 'No such compose file'})
         fpath = utils.prefixStorageDir(cpobj.FILEPATH) if not os.path.isabs(cpobj.FILEPATH) else cpobj.FILEPATH
+        cpobj['file_exists'] = os.path.isfile(fpath)
+        if cpobj['file_exists']:
+            st = os.stat(fpath)
+            cpobj['stmode'] = '%s'%oct(stat.S_IMODE(st.st_mode))
         cpobj['images'] = mcompose.compose_images(fpath)
         cpobj['containers'] = mcompose.compose_containers(fpath)
+        cpobj['filebody'] = mcompose.compose_filebody(fpath)
         return formator.json_string({'body': cpobj})
 
-########################################
 def needAddChunkedHeader():
     server = web.ctx.environ.get('SERVER_SOFTWARE', '')
     port1 = web.ctx.environ.get('SERVER_PORT', '')
@@ -646,6 +655,35 @@ class CtrlComposeRemove:
         while True:
             try:
                 yield next(retval)
+            except StopIteration:
+                break
+
+class CtrlComposeShell:
+    def POST(self, cmpsid):
+        SignatureHooker.checkSignature(self)
+        params = web.input()
+        cpobj = mdb.get_compose(cmpsid)
+        if not cpobj:
+            return 'No such compose file'
+        fpath = utils.prefixStorageDir(cpobj.FILEPATH) if not os.path.isabs(cpobj.FILEPATH) else cpobj.FILEPATH
+        if os.access(fpath, os.X_OK):
+            retval = mcompose.iterateShellCall(fpath)
+        else:
+            if fpath.lower().endswith('.py'):
+                retval = mcompose.iterateShellCall('python '+fpath)
+            elif fpath.lower().endswith('.sh'):
+                retval = mcompose.iterateShellCall('bash '+fpath)
+            elif fpath.lower().endswith('.js'):
+                retval = mcompose.iterateShellCall('node '+fpath)
+            else:
+                retval = mcompose.iterateShellCall(fpath)
+        web.header('Content-type','application/octet-stream')
+        if needAddChunkedHeader():
+            web.header('Transfer-Encoding','chunked')
+        while True:
+            try:
+                sval = next(retval)
+                yield mcompose.escape_ansi2(sval)
             except StopIteration:
                 break
 

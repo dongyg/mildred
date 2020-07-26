@@ -81,7 +81,7 @@ def list_files(folder):
                 if os.path.isdir(n):
                     retval.append([n,'d'])
                 elif os.path.isfile(n):
-                    retval.append([n,'f'])
+                    retval.append((n, 'f'))
         retval.sort()
         return retval
     elif not os.path.isabs(folder) or folder=='':
@@ -90,7 +90,7 @@ def list_files(folder):
         if not n.endswith('docker.sock') and (platform.system().lower()!='windows' and not n.startswith('.')):
             if os.path.isdir(os.path.join(folder,n)):
                 retval.append((n, 'd'))
-            elif os.path.isfile(os.path.join(folder,n)) and n.lower().endswith(('.yaml','.yml')):
+            elif os.path.isfile(os.path.join(folder,n)):
                 retval.append((n, 'f'))
     return retval
 
@@ -105,6 +105,7 @@ def compose_info():
 def compose_images(fname):
     retval = []
     if not os.path.isfile(fname): return retval
+    if not fname.lower().endswith(('.yaml','.yml')): return retval
     retdat = callShell('docker-compose -f %s --no-ansi images -q'%fname)
     iids = [y for x in retdat.split('\r\n') for y in x.split('\n')]
     try:
@@ -121,6 +122,7 @@ def compose_images(fname):
 def compose_containers(fname):
     retval = []
     if not os.path.isfile(fname): return retval
+    if not fname.lower().endswith(('.yaml','.yml')): return retval
     retdat = callShell('docker-compose -f %s --no-ansi ps -q'%fname)
     cids = [y for x in retdat.split('\r\n') for y in x.split('\n')]
     try:
@@ -130,6 +132,13 @@ def compose_containers(fname):
     return retval
 
 ########################################
+def compose_filebody(fname):
+    retval = "File not exists"
+    if os.path.isfile(fname):
+        with open(fname) as fobj:
+            retval = fobj.read()
+    return retval
+
 def compose_test(count):
     fi = iterateTest(count)
     return fi

@@ -383,7 +383,7 @@ def logs_classall():
     variant.logiers = {}
 
 def logs_keepiters():
-    needskey = variant.alertlg.keys()
+    needskey = list(variant.alertlg.keys())
     for key in list(variant.logiers.keys()):
         if key not in needskey:
             variant.logiers[key].close()
@@ -392,7 +392,7 @@ def logs_keepiters():
         if cname not in variant.logiers:
             try:
                 cobj = get_container(cname)
-                if cobj['status'] == 'running':
+                if cobj.get('status') == 'running':
                     variant.logiers[cname] = dclient.api.logs(cname, stream=True, timestamps=True, tail=0)
             except Exception as e:
                 traceback.print_exc()
