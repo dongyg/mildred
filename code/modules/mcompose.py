@@ -81,17 +81,16 @@ def list_files(folder):
                 if os.path.isdir(n):
                     retval.append([n,'d'])
                 elif os.path.isfile(n):
-                    retval.append((n, 'f'))
-        retval.sort()
+                    retval.append([n, 'f'])
         return retval
     elif not os.path.isabs(folder) or folder=='':
         folder = utils.prefixStorageDir(folder)
     for n in os.listdir(folder):
         if not n.endswith('docker.sock') and (platform.system().lower()!='windows' and not n.startswith('.')):
             if os.path.isdir(os.path.join(folder,n)):
-                retval.append((n, 'd'))
+                retval.append([n, 'd'])
             elif os.path.isfile(os.path.join(folder,n)):
-                retval.append((n, 'f'))
+                retval.append([n, 'f'])
     return retval
 
 COMPOSE_HINT = '''docker-compose is running in a Mildred container. docker-compose up could fail in some cases because it's in a container.\n
