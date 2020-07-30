@@ -283,9 +283,9 @@ def load_alerts():
     llg = groupby([x for x in m if x.ALTYPE==1], itemgetter('CNAME'))
     lcm = groupby([x for x in m if x.ALTYPE in (2,3)], itemgetter('CNAME'))
     lph = groupby([x for x in m if x.ALTYPE in (4,5)], itemgetter('CNAME'))
-    web.config.vars['alertlg'] = dict([(cname, list(val)) for cname, val in llg if mdocker.exists_container(cname)])
-    web.config.vars['alertcm'] = dict([(cname, list(val)) for cname, val in lcm if mdocker.exists_container(cname)])
-    web.config.vars['alertph'] = dict([(cname, list(val)) for cname, val in lph if mdocker.exists_container(cname)])
+    web.config.vars['alertlg'] = dict([(cname, list(val)) for cname, val in llg if cname=='--sys--' or mdocker.exists_container(cname)])
+    web.config.vars['alertcm'] = dict([(cname, list(val)) for cname, val in lcm if cname=='--sys--' or mdocker.exists_container(cname)])
+    web.config.vars['alertph'] = dict([(cname, list(val)) for cname, val in lph if cname=='--sys--' or mdocker.exists_container(cname)])
 
 def insert_stats(cname, hdat):
     if not dbsl: return
