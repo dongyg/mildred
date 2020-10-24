@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
+
 from config import *
 from . import mdb, mdocker
 
 dclient = variant.dclient
 
-################################################################################
 def callShell(cmd):
     import subprocess,traceback,platform
     try:
@@ -19,6 +19,7 @@ def callShell(cmd):
     if platform.system()=='Windows':
         retval = unicode(retval, 'gbk')
     return retval.strip().decode('utf8')
+
 
 def execShell(cmd):
     from subprocess import check_output
@@ -35,7 +36,7 @@ def iterateTest(count):
         yield "%s"%x
         time.sleep(0.5)
 
-################################################################################
+
 def escape_ansi1(value):
     import re
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
@@ -52,7 +53,6 @@ def escape_ansi3(somebytesvalue):
     )
     return ansi_escape_8bit.sub(b'', somebytesvalue)
 
-################################################################################
 def get_mac_address():
     import uuid
     mac = uuid.UUID(int = uuid.getnode()).hex[-12:]
@@ -131,7 +131,7 @@ def compose_containers(fname):
         pass
     return retval
 
-########################################
+
 def compose_filebody(fname):
     retval = "File not exists"
     if os.path.isfile(fname):
@@ -166,4 +166,5 @@ def compose_restart(fname):
 def compose_remove(fname):
     retval = iterateShellCall('docker-compose -f %s --no-ansi rm -f'%fname)
     return retval
+
 

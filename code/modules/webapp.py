@@ -6,7 +6,6 @@ from config import *
 urls_view = (
     '',             'CtrlIndex',
     '/',            'CtrlIndex',
-    # '/.*',          'CtrlViewController',
 )
 app_www = web.application(urls_view, locals())
 
@@ -22,4 +21,5 @@ class CtrlViewController(object):
             return render(pagedata)
         else:
             return web.notfound()
+
 

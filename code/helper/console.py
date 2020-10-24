@@ -57,3 +57,4 @@ def embed(local=None, banner='', shell=None):
             break
         else:
             break
+

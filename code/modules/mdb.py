@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
+
 import os, base64, time, traceback, json, random, hashlib
 from datetime import datetime, date, timedelta
 import yaml, web, rsa
@@ -127,7 +128,6 @@ def set_syskey(key, val):
     else:
         dbsl.insert("DM_CONFIG", CKEY=key, CVAL=val)
 
-################################################################################
 
 def load_pubkeys():
     if not dbsl: return
@@ -273,7 +273,6 @@ def set_codeserver(lid, curl):
         t.commit()
         return {}
 
-################################################################################
 
 def load_alerts():
     from operator import itemgetter
@@ -401,7 +400,6 @@ def del_alert(alid):
         load_alerts()
         return {}
 
-################################################################################
 
 def count_message1(lid, cname=''):
     if not dbsl: return {}
@@ -498,7 +496,6 @@ def del_message(msgid):
         t.commit()
         return {}
 
-################################################################################
 
 def list_compose():
     if not dbsl: return []
@@ -558,3 +555,4 @@ def del_compose(cmpsid):
     else:
         t.commit()
         return {}
+

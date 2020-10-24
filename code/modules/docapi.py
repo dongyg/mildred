@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
+
 import stat
 from config import *
 
@@ -9,7 +10,6 @@ from . import mdocker, mcompose, mdb
 urls_rest = (
     '',             'CtrlIndex',
     '/',            'CtrlIndex',
-    # '/whoami',                       'CtrlWhoAmI',
     '/server/bind',                  'CtrlServerBind',
     '/server/swbind',                'CtrlServerSwitchBind',
     '/server/vscode',                'CtrlServerVsCode',
@@ -42,7 +42,6 @@ urls_rest = (
     '/composes',                     'CtrlComposeList',
     '/composes/files',               'CtrlFileList',
     '/composes/(.+)/',               'CtrlComposeInfo',
-    # '/compose/test',                 'CtrlComposeTest',
     '/compose/(.+)/up',              'CtrlComposeUp',
     '/compose/(.+)/down',            'CtrlComposeDown',
     '/compose/(.+)/start',           'CtrlComposeStart',
@@ -79,23 +78,13 @@ class CtrlIndex:
                 "dkok": "errmsg" not in dockinfo,
                 "dcok": dcmpinfo[0].find('not found')<0,
                 "stok": os.path.isdir('../storage'),
-                "ssok": not realhome.startswith('https://') and not web.validipaddr(web.ctx.get('host')), # http://domainname couldn't be access from ios
+                "ssok": not realhome.startswith('https://') and not web.validipaddr(web.ctx.get('host')),
                 "imgd": img_str,
             }
             return render(pagedata)
         else:
             return web.notfound()
 
-class CtrlWhoAmI:
-    def GET(self):
-        ipaddress = web.ctx.env.get('HTTP_X_REAL_IP') or web.ctx.env.get('REMOTE_ADDR') or 'Unknown'
-        protocol = web.ctx.get('protocol') or 'http'
-        realhome = web.ctx.get('realhome') or 'unknown'
-        if web.ctx.env.get('HTTP_X_FORWARDED_PROTO') and web.ctx.env['HTTP_X_FORWARDED_PROTO']!=protocol:
-            realhome = realhome.replace(protocol, web.ctx.env['HTTP_X_FORWARDED_PROTO'])
-        req_uri = web.ctx.env.get('REQUEST_URI', 'path')
-        retval = "Hello %s, you are accessing %s%s"%(ipaddress, realhome, req_uri)
-        return retval
 
 class SignatureHooker:
     def checkSignature(self):
@@ -106,7 +95,6 @@ class SignatureHooker:
             web.header('DOCKER_ERRMSG', retsig['errmsg'])
             raise web.notfound('{}')
 
-################################################################################
 class CtrlServerBind:
     def GET(self):
         if mdb.get_syskey('ENABLE_BIND', '0') != '1':
@@ -259,7 +247,6 @@ class CtrlServerStatMinute:
             retval = dict([(cname,val) for cname, val in variant.mindata.items() if cname in cnames])
         return formator.json_string({'body':retval})
 
-################################################################################
 class CtrlServerAlertList:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -324,7 +311,6 @@ class CtrlMessageInfo:
         retval = mdb.get_message(msgid)
         return formator.json_string({'body':retval})
 
-################################################################################
 class CtrlContainerList:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -416,13 +402,7 @@ class CtrlContainerStatMinute:
             retval = variant.mindata[cname]
         return formator.json_string({'body':retval, 'length':len(retval)})
 
-class CtrlContainerStatHistory:
-    def GET(self, cname):
-        #TODO:
-        SignatureHooker.checkSignature(self)
-        params = web.input(ts1='', ts2='')
 
-################################################################################
 class CtrlImageList:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -436,7 +416,6 @@ class CtrlImageRemove:
         return formator.json_string(retval)
 
 
-################################################################################
 class CtrlReachablePort:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -467,7 +446,6 @@ class CtrlReachableHttp:
         return formator.json_string(retval)
 
 
-################################################################################
 class CtrlComposeList:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -499,7 +477,6 @@ class CtrlFileList:
         retval = mcompose.list_files(params.folder)
         return formator.json_string({'body': retval})
 
-########################################
 class CtrlComposeInfo:
     def GET(self, cmpsid):
         SignatureHooker.checkSignature(self)
@@ -517,6 +494,7 @@ class CtrlComposeInfo:
         cpobj['filebody'] = mcompose.compose_filebody(fpath)
         return formator.json_string({'body': cpobj})
 
+
 def needAddChunkedHeader():
     server = web.ctx.environ.get('SERVER_SOFTWARE', '')
     port1 = web.ctx.environ.get('SERVER_PORT', '')
@@ -533,23 +511,6 @@ def needAddChunkedHeader():
     else:
         return False
 
-class CtrlComposeTest:
-    def GET(self):
-        # SignatureHooker.checkSignature(self)
-        # These headers make it work in browsers
-        # web.header('Content-type','text/html')
-        web.header('Content-type','application/octet-stream')
-        if needAddChunkedHeader():
-            # Only set this header if you're running web.py's builtin http server.
-            web.header('Transfer-Encoding','chunked')
-        fi = mcompose.compose_test(100)
-        while True:
-            try:
-                retval = next(fi)
-                print(retval)
-                yield retval
-            except StopIteration:
-                break
 
 class CtrlComposeUp:
     def POST(self, cmpsid):
@@ -688,7 +649,6 @@ class CtrlComposeShell:
                 break
 
 
-################################################################################
 class CtrlStaticFiles:
     def GET(self):
         inpath = web.ctx.path[1:]
@@ -712,9 +672,9 @@ class CtrlStaticFiles:
         return content
 
 
-################################################################################
 class CtrlViewController(object):
     def GET(self):
         web.header("Content-Type", "text/json")
         return formator.json_string({'errmsg': 'API not exists. Please upgrade your server-side to the newest version.'})
+
 

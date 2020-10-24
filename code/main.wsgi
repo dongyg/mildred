@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
-# Mildred server-side for docker server, running as a container
 
 import os, sys, _thread, signal
 app_root = os.path.dirname(__file__)
@@ -40,3 +39,4 @@ if __name__ == '__main__':
         console.embed()
     mdocker.stat_closeall()
     print('Bye.')
+

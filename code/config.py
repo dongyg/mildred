@@ -37,3 +37,4 @@ def get_render(inpath, view=render):
     return getattr(view, inpath) or web.notfound
 
 web.config.vars['get_render'] = get_render
+

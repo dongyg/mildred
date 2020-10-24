@@ -15,7 +15,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, Decimal):
             return "%.6f" % obj
         elif isinstance(obj, timedelta):
-            s = str(obj) # [H]H:MM:SS
+            s = str(obj)
             if len(s)==7:
                 s = '0'+s
             return s
@@ -68,13 +68,6 @@ def month_add(months,ts=None):
     while nm < 0:
         nm = nm + 12
         ny = ny - 1
-    # retval = None
-    # while not retval:
-    #     try:
-    #         retval = datetime(ny, nm, nd, d.hour, d.minute, d.second, d.microsecond)
-    #     except Exception as e:
-    #         nd = nd - 1
-    # return retval.timestamp()
     if nm in (4,6,9,11):
         if nd == 31:
             nd = 30
@@ -99,9 +92,6 @@ def is_leap_year(year_num):
             return False
 
 def get_ts_from_utcstr(dstr):
-    # '2020-04-30T16:58:52.124604525Z' -> 1588265932.0
-    # '2020-07-07T02:16:00.673039482+08:00' -> 1594059360.0
-    # '2020-07-06T19:39:43.133292713-07:00' -> 1594089583.0
     try:
         d, dstr = dstr.split('T', 1)
         t, dstr = dstr.split('.', 1)
@@ -114,23 +104,17 @@ def get_ts_from_utcstr(dstr):
         else:
             z = ''
         dt = datetime.fromisoformat('%sT%s%s'%(d, t, z))
-        # return (dt-datetime(year=1970,month=1,day=1)).total_seconds()
         return dt.timestamp()
     except Exception as e:
         traceback.print_exc()
         return 0
 
 def get_utcstr_from_ts(ts):
-    # 1588265932.0 -> '2020-04-30T16:58:52.0+00:00'
-    # 1594059360.0 -> '2020-07-06T18:16:00.0+00:00'
-    # 1594089583.0 -> '2020-07-07T02:39:43.0+00:00'
     return '%s.%s+00:00'%(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(ts)), datetime.fromtimestamp(ts).microsecond)
 
 def get_docker_status(Running, ExitCode, StartedAt):
-    # "Running": true,
-    # "ExitCode": 0,
-    # "StartedAt": "2020-04-22T19:09:21.997443589Z",
     retval = 'Up' if Running else ('Exit (%s)'%ExitCode)
     retval += ' at ' + StartedAt[:19] + 'Z'
     return retval
+
 

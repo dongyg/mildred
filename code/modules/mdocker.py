@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #-*- encoding: utf-8 -*-
 
+
 from datetime import datetime
 from config import *
 from . import mdb, apush
 
+
 dclient = variant.dclient
 
-################################################################################
 def get_dkinfo():
     try:
         dclient.ping()
@@ -30,7 +31,7 @@ def get_dkinfo():
     }
     return retval
 
-################################################################################
+
 def dict_container(cobj):
     if isinstance(cobj, docker.models.containers.Container):
         return {
@@ -122,21 +123,21 @@ def inspect_container(cname):
     try:
         cobj = dclient.containers.get(cname)
         cdct = get_dct_container(cname)
-        nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings'], ['IPAddress', 'Gateway']).items()], # list: tuple(key,value)
+        nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings'], ['IPAddress', 'Gateway']).items()],
         if (not nets or not nets[0] or not nets[0][1] ) and cobj.attrs['HostConfig']['NetworkMode'] in cobj.attrs['NetworkSettings']['Networks']:
-            nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings']['Networks'][ cobj.attrs['HostConfig']['NetworkMode'] ], ['IPAddress', 'Gateway']).items()], # list: tuple(key,value)
+            nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings']['Networks'][ cobj.attrs['HostConfig']['NetworkMode'] ], ['IPAddress', 'Gateway']).items()],
         return {"body":{
-            'Cmd': cdct['Command'], # String
-            'Env': [x.split('=') for x in cobj.attrs['Config']['Env']], # list: String
-            'Mounts': [utils.copy_dict(x, ['Source', 'Destination', 'Mode']) for x in cobj.attrs['Mounts']], # list: dict: 'Source', 'Destination', 'Mode'
+            'Cmd': cdct['Command'],
+            'Env': [x.split('=') for x in cobj.attrs['Config']['Env']],
+            'Mounts': [utils.copy_dict(x, ['Source', 'Destination', 'Mode']) for x in cobj.attrs['Mounts']],
             'Networks': nets,
-            'Ports': [(key, '%s:%s'%(val[0]['HostIp'],val[0]['HostPort'])) for key, val in cobj.attrs['NetworkSettings']['Ports'].items() if val], # list: tuple(ExposedPort,HostPort)
+            'Ports': [(key, '%s:%s'%(val[0]['HostIp'],val[0]['HostPort'])) for key, val in cobj.attrs['NetworkSettings']['Ports'].items() if val],
         }}
     except Exception as e:
         traceback.print_exc()
         return {"errmsg":e}
 
-########################################
+
 def logs_container_tail(cname, lines):
     try:
         retdat = dclient.api.logs(cname, tail=lines, timestamps=True).decode().strip()
@@ -200,7 +201,7 @@ def recurse_backward(cname, tslast, dtbase, lines, movedays, retval=[]):
         retval = recurse_backward(cname, tslast, dt2, lines, movedays*2, retval)
     return retval
 
-########################################
+
 def avg(l):
     r = [x for x in l if x != None]
     if len(r) == 0:
@@ -460,6 +461,7 @@ def stat_daemon():
         utils.outMessage('Interrupt stat_daemon')
 
 def alert_watch_2345(cname, mdat):
+
     for aobj in variant.alertcm.get(cname,[])+variant.alertph.get(cname,[]):
         if not mdat and aobj.ALTYPE in (2,3):
             continue
@@ -528,7 +530,7 @@ def alert_watch_2345(cname, mdat):
         else:
             aobj.pop('ALERTCOUNT', None)
 
-################################################################################
+
 def dict_image(iobj, tag='', parents=[], all_container=[]):
     if isinstance(iobj, docker.models.images.Image):
         retval = {
@@ -639,5 +641,6 @@ def remove_image(iname):
     except Exception as e:
         traceback.print_exc()
         return {"errmsg":e}
+
 
 

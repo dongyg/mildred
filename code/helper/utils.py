@@ -20,15 +20,9 @@ def getRandomNumber(size):
     return ''.join(random.choice(string.digits) for i in range(size))
 
 def base64ToBase64url(base64):
-    # '+' -> '-'
-    # '/' -> '_'
-    # '=' -> ''
     return base64.replace('+','-').replace('/','_').replace('=','')
 
 def base64urlToBase64(base64url):
-    # '-' -> '+'
-    # '_' -> '/'
-    # append '='
     retval = base64url.replace("-", "+").replace("_", "/")
     if len(retval)%4 != 0:
         retval = retval + '='*(4-len(retval)%4)
@@ -92,7 +86,7 @@ def prefixStorageDir(folder):
         folder = os.path.join('../storage', folder)
     return folder
 
-################################################################################
 def test():
     print('test.utils')
+
 
