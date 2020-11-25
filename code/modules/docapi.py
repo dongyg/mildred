@@ -18,6 +18,7 @@ urls_rest = (
     '/server/swstat',                'CtrlServerStatSwitch',
     '/server/stat/second',           'CtrlServerStatSecond',
     '/server/stat/minute',           'CtrlServerStatMinute',
+    '/server/stat/minute/v2',        'CtrlServerStatMinuteV2',
     '/server/alerts',                'CtrlServerAlertList',
     '/message/new',                  'CtrlMessageNews',
     '/message/unrdcnt',              'CtrlMessageUnread',
@@ -239,12 +240,14 @@ class CtrlServerStatMinute:
     def GET(self):
         SignatureHooker.checkSignature(self)
         params = web.input(ts='')
-        cnames = [x['name'] for x in mdocker.list_container()]
-        if params.ts and formator.isFloat(params.ts):
-            ff = lambda val : [x for x in val if x[0]>float(params.ts)]
-            retval = dict([(cname,ff(val)) for cname, val in variant.mindata.items() if cname in cnames])
-        else:
-            retval = dict([(cname,val) for cname, val in variant.mindata.items() if cname in cnames])
+        retval = mdocker.get_stat_mindata(params.ts)
+        return formator.json_string({'body':retval})
+
+class CtrlServerStatMinuteV2:
+    def GET(self):
+        SignatureHooker.checkSignature(self)
+        params = web.input(ts='')
+        retval = mdocker.get_top6_mindata(params.ts)
         return formator.json_string({'body':retval})
 
 class CtrlServerAlertList:
@@ -316,6 +319,8 @@ class CtrlContainerList:
         SignatureHooker.checkSignature(self)
         params = web.input(lid='')
         retval = mdocker.list_container()
+        stdata = dict([(cname,val[-1] if val else []) for cname, val in variant.mindata.items()])
+        retval = [{'stat':stdata.get(x['name'],[]), **x} for x in retval]
         return formator.json_string({'body':retval, 'msg_counts':mdb.count_message1(params.lid)})
 
 class CtrlContainerGet:

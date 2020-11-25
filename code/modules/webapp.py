@@ -13,6 +13,7 @@ class CtrlIndex:
     def GET(self):
         web.seeother('/mildred')
 
+
 class CtrlViewController(object):
     def GET(self):
         render = variant.get_render(web.ctx.path[1:])

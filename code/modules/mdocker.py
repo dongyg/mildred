@@ -15,6 +15,7 @@ def get_dkinfo():
     except Exception as e:
         return {"errmsg":"Failed to communicate with docker"}
     dkinfo = dclient.info()
+    cpu_usage, mem_usage = get_cm_usage()
     retval = {
         'URI': '',
         'ID': utils.get_sha1(dkinfo['ID']),
@@ -22,8 +23,8 @@ def get_dkinfo():
         'ProductLicense': dkinfo.get('ProductLicense',''),
         'ServerVersion': dkinfo['ServerVersion'],
         'SystemTime': formator.get_ts_from_utcstr(dkinfo['SystemTime']),
-        'NCPU': dkinfo['NCPU'],
-        'MemTotal': dkinfo['MemTotal'],
+        'NCPU': dkinfo['NCPU'], 'CpuUsage': cpu_usage,
+        'MemTotal': dkinfo['MemTotal'], 'MemUsage': mem_usage,
         'OperatingSystem': dkinfo['OperatingSystem'],
         'OSType': dkinfo['OSType'],
         'Images': dkinfo['Images'],
@@ -215,6 +216,65 @@ def nsum(l):
 
 def container_exists_byname(cname):
     return cname in [cobj['Names'][0][1:] for cobj in dclient.api.containers(all=True)]
+
+def get_stat_mindata(ts='0'):
+    cnames = [x['name'] for x in list_container()]
+    if ts and formator.isFloat(ts):
+        ff = lambda val : [x for x in val if x[0]>float(ts)]
+        retval = dict([(cname,ff(val)) for cname, val in variant.mindata.items() if cname in cnames])
+    else:
+        retval = dict([(cname,val) for cname, val in variant.mindata.items() if cname in cnames])
+    return retval
+
+def get_cm_usage(cname=''):
+    alldata = get_stat_mindata()
+    retdat1 = [datas[-1][1] for key, datas in alldata.items() if (key==cname or cname=='') and len(datas)>0 and len(datas[-1])==12]
+    retdat2 = [datas[-1][2] for key, datas in alldata.items() if (key==cname or cname=='') and len(datas)>0 and len(datas[-1])==12]
+    return sum(retdat1), sum(retdat2)
+
+def get_top6_mindata(ts='0'):
+    from functools import cmp_to_key
+    alldata = get_stat_mindata(ts)
+    top6name = []
+    for cname in alldata.keys():
+        top6name.append([cname, alldata[cname][-1][2] if len(alldata[cname])>0 and len(alldata[cname][-1])>2 else 0])
+    top6name.sort(key=cmp_to_key(lambda a, b: b[1]-a[1]))
+    retval = {}
+    count = 1
+    for cname, fake in top6name:
+        retval[cname] = alldata.pop(cname, [])
+        count += 1
+        if count>=6: break
+    timearray = []
+    for cname, tmpl in alldata.items():
+        timearray.extend([x[0] for x in tmpl])
+    timearray = list(set(timearray))
+    timearray.sort()
+    retval['Others'] = {}
+    for cname, tmpl in alldata.items():
+        for curritem in tmpl:
+            currtime = curritem[0]
+            saveitem = retval['Others'].get(currtime)
+            if not saveitem:
+                retval['Others'][currtime] = curritem
+            else:
+                retval['Others'][currtime] = [
+                    currtime,
+                    round(saveitem[1] + curritem[1], 2),
+                    saveitem[2] + curritem[2],
+                    saveitem[3] + curritem[3],
+                    saveitem[4] + curritem[4],
+                    saveitem[5] + curritem[5],
+                    saveitem[6] + curritem[6],
+                    saveitem[7] + curritem[7],
+                    saveitem[8] + curritem[8],
+                    saveitem[9] + curritem[9],
+                    saveitem[10] + curritem[10],
+                    saveitem[11] + curritem[11],
+                ]
+    retval['Others'] = list(retval['Others'].values())
+    retval['Others'].sort(key=cmp_to_key(lambda a, b: a[0]-b[0]))
+    return retval
 
 def stat_container(cname):
     ster = variant.staters[cname]
