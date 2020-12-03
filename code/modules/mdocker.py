@@ -362,7 +362,7 @@ def stat_carry2hour(cname):
     if not variant.mindata[cname]: return
     st1 = variant.mindata[cname][0][0]
     st2 = variant.mindata[cname][-1][0]
-    if st2-st1>2*3600:
+    if st2-st1>2*3600 or time.time()-st1>2*3600:
         tmpl = []
         hmin = datetime.fromtimestamp(variant.mindata[cname][0][0]).hour
         lmin = hmin
