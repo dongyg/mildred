@@ -42,7 +42,7 @@ def dict_container(cobj):
             'status': cobj.status,
             'Created': int(formator.get_ts_from_utcstr(cobj.attrs['Created'])),
             'StartedAt': formator.get_docker_status(cobj.attrs['State']['Running'], cobj.attrs['State']['ExitCode'], cobj.attrs['State']['StartedAt']),
-            'ports': ','.join([x.split('/')[0] for x in cobj.ports.keys()]),
+            'ports': ','.join(set([x.split('/')[0] for x in cobj.ports.keys()])),
         }
     elif isinstance(cobj, dict):
         return {
@@ -52,7 +52,7 @@ def dict_container(cobj):
             'status': cobj['State'],
             'Created': cobj['Created'],
             'StartedAt': cobj['Status'],
-            'ports': ','.join(['%s'%(x['PublicPort']) for x in cobj['Ports'] if 'PublicPort' in x and 'Type' in x]),
+            'ports': ','.join(set(['%s'%(x['PublicPort']) for x in cobj['Ports'] if 'PublicPort' in x and 'Type' in x])),
         }
     else:
         return {}
