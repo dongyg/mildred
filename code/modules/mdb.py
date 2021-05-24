@@ -507,10 +507,12 @@ def get_noti(lid):
     return web.listget(dbsl.select("DM_CLIENTS", vars=locals(), where="LICENSEID=$lid", what="EXNOTIISON, EXNOTIPASS").list(), 0, {})
 def set_noti(lid, ison, pkey):
     if not dbsl: return {'errmsg': 'No database'}
+    lobj = web.config.vars.pubkeys.get(lid)
+    if not lobj: return {'errmsg': 'License not exists'}
+    if lobj.get('push_expire',0)<=time.time(): return {'errmsg': 'License/Push service expired'}
     t = dbsl.transaction()
     try:
         dbsl.update("DM_CLIENTS", vars=locals(), where="LICENSEID=$lid", EXNOTIISON=ison, EXNOTIPASS=pkey)
-        lobj = web.config.vars.pubkeys.get(lid)
         lobj['EXNOTIISON'] = ison
         lobj['EXNOTIPASS'] = pkey
         web.config.vars.pubkeys[lid] = lobj
