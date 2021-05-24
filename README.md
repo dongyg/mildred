@@ -4,7 +4,7 @@ Mildred is a tool for managing your docker servers from your iOS devices. It inc
 
 ## Why a server-side
 
-The Mildred App connects your docker server via a server-side web app instead of the Docker REST API. The server-side web app can provide more features such as docker-compose, storage statistics, logs, alerts, notifications and more.
+The Mildred App connects your docker server via a server-side web app instead of the Docker REST API. The server-side web app can provide more features such as docker-compose, statistics history, logs, alerts, notifications and more.
 
 ## Installation
 
@@ -35,6 +35,41 @@ Binding will be unavailable after the first device bound. You could turn it on i
 docker exec -it mildred python configuration.py --binding-on
 ```
 
+
+## External Push Notification
+
+This is a Restful API which you can use it to send a push notification to your device. You can enable this feature in the App.
+
+PUT /mildred/license/{license id}/noti
+
+```
+pkey: password
+level: 1-Info/2-Warning/3-Error
+title:
+body:
+url:
+```
+
+```python
+# Python sample code
+import urllib
+import urllib.parse
+import urllib.request
+
+host = 'http://192.168.0.18:8017'
+path = '/mildred/license/your_license_id/noti'
+body = dict(pkey='qqq', level=1, title='Title for demo', body='This is body for demo', url='https://github.com/dongyg/mildred')
+data = urllib.parse.urlencode(body).encode("utf-8")
+req = urllib.request.Request("%s%s"%(host,path), method='PUT', data=data)
+res = urllib.request.urlopen(req)
+retval = res.read()
+retval = retval.decode('utf-8')
+print(retval)
+
+# {} means successed. Otherwise a error message should be returned, such as {"errmsg": "License not exists"}
+```
+
+
 ## Upgrade
 
 ### Upgrade the Image dongyg/mildred
@@ -49,7 +84,7 @@ docker image rm dongyg/mildred
 cd /your/path/mildred && docker-compose up -d
 ```
 
-### Just code
+### Upgrde code
 
 ```bash
 cd /your/path/mildred

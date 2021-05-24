@@ -99,7 +99,11 @@ SQL_SCHEMA_CREATE = [
 ]
 
 SQL_SCHEMA_UPDATE = {
-    '2': []
+    '2': [''],
+    '3': ['ALTER TABLE DM_MESSAGE ADD COLUMN MSGURL VARCHAR(500)',
+          'ALTER TABLE DM_CLIENTS ADD COLUMN EXNOTIISON INTEGER',
+          'ALTER TABLE DM_CLIENTS ADD COLUMN EXNOTIPASS VARCHAR(60)',
+         ],
 }
 
 def initSchema():
@@ -202,6 +206,8 @@ def del_license_bind(lid):
     t = dbsl.transaction()
     try:
         dbsl.delete("DM_CLIENTS", vars=locals(), where="LICENSEID=$lid")
+        if web.listget(dbsl.select("DM_CLIENTS", what="count(*) CNT").list(),0,{}).get('CNT',0) == 0:
+            set_syskey('ENABLE_BIND', 1)
     except Exception as e:
         t.rollback()
         traceback.print_exc()
@@ -307,7 +313,7 @@ def insert_stats(cname, hdat):
 
 def list_alert(lid, cname):
     if not dbsl: return []
-    swhere = "LICENSEID=$lid"
+    swhere = "LICENSEID=$lid AND ALTYPE>0"
     if cname:
         swhere += " and CNAME=$cname"
     retval = dbsl.select("DM_ALERTS", what="ALID,CNAME,ALTYPE,ALSTR,ALVAL,ALENABLED,ALPUSH,ALLEVEL",
@@ -444,7 +450,7 @@ def list_message(lid, cname, alid='', skey='', isrd='', offset=0, limit=20):
     if isrd:
         swhere += " AND ISREAD<2"
     retval = dbsl.select("DM_ALERTS A, DM_MESSAGE M",
-        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY",
+        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY,MSGURL",
         vars=locals(), where=swhere, order="ISREAD, M.MSGID desc", offset=offset, limit=limit).list()
     return retval
 
@@ -466,7 +472,7 @@ def new_message(data):
 def get_message(msgid):
     if not dbsl: return {'errmsg': 'No database'}
     retval = web.listget(dbsl.select("DM_ALERTS A, DM_MESSAGE M",
-        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY",
+        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY,MSGURL",
         vars=locals(), where="A.ALID=M.ALID AND M.MSGID=$msgid").list(),0,{})
     return retval
 
@@ -495,6 +501,61 @@ def del_message(msgid):
     else:
         t.commit()
         return {}
+
+
+def get_noti(lid):
+    return web.listget(dbsl.select("DM_CLIENTS", vars=locals(), where="LICENSEID=$lid", what="EXNOTIISON, EXNOTIPASS").list(), 0, {})
+def set_noti(lid, ison, pkey):
+    if not dbsl: return {'errmsg': 'No database'}
+    t = dbsl.transaction()
+    try:
+        dbsl.update("DM_CLIENTS", vars=locals(), where="LICENSEID=$lid", EXNOTIISON=ison, EXNOTIPASS=pkey)
+        lobj = web.config.vars.pubkeys.get(lid)
+        lobj['EXNOTIISON'] = ison
+        lobj['EXNOTIPASS'] = pkey
+        web.config.vars.pubkeys[lid] = lobj
+    except Exception as e:
+        t.rollback()
+        traceback.print_exc()
+        return {"errmsg":e}
+    else:
+        t.commit()
+        return {}
+
+def push_message(lid, pkey, data):
+    if not dbsl: return {'errmsg': 'No database'}
+    lobj = web.config.vars.pubkeys.get(lid)
+    if not lobj: return {'errmsg': 'License not exists'}
+    if lobj.get('push_expire',0)<=time.time(): return {'errmsg': 'License/Push service expired'}
+    if not lobj.get('EXNOTIISON'): return {'errmsg': 'External notification is off'}
+    if not pkey or (pkey and lobj.get('EXNOTIPASS')!=pkey): return {'errmsg': 'Require password to send external notification'}
+    if not data.get('body'): return {'errmsg': 'body required'}
+    if '%s'%data.get('level','') not in ('1','2','3'): data['level'] = 1
+    from . import apush
+    try:
+        aobj = web.listget(dbsl.select("DM_ALERTS", vars=locals(), where="LICENSEID=$lid and CNAME='--sys--' and ALTYPE=0 and ALENABLED=0").list(), 0, None)
+        if not aobj:
+            alid = dbsl.insert("DM_ALERTS", ALSTR = '', ALVAL = '', ALPUSH = 1,
+                LICENSEID = lid, CNAME = '--sys--', ALTYPE = 0, ALENABLED = 0, ALLEVEL = data.get('level', 1)
+            )
+        else:
+            alid = aobj.ALID
+        msgid = dbsl.insert("DM_MESSAGE",
+            ALID        = alid,
+            MSGSTAMP    = time.time(),
+            ISREAD      = 0,
+            ISPUSHED    = 1,
+            MSGKEYWORD  = data.get('title',''),
+            MSGBODY     = data.get('body',''),
+            MSGURL      = data.get('url', '')
+        )
+        retval = apush.pushNotification(lobj.get('LICENSEID',''), lobj.get('SERVERID',''), lobj.get('DEVICEID',''), data.get('title',''), data.get('body',''),
+            'domapp://message/%s?lid=%s'%(msgid,lid))
+        retval = formator.json_object(retval)
+        return retval
+    except Exception as e:
+        return {'errmsg': str(e)}
+
 
 
 def list_compose():

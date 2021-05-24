@@ -20,6 +20,7 @@ urls_rest = (
     '/server/stat/minute',           'CtrlServerStatMinute',
     '/server/stat/minute/v2',        'CtrlServerStatMinuteV2',
     '/server/alerts',                'CtrlServerAlertList',
+    '/license/(.+)/noti',            'CtrlLicenseNotification',
     '/message/new',                  'CtrlMessageNews',
     '/message/unrdcnt',              'CtrlMessageUnread',
     '/message/all',                  'CtrlMessageList',
@@ -267,6 +268,23 @@ class CtrlServerAlertList:
         retval = mdb.del_alert(params.alid)
         return formator.json_string(retval)
 
+class CtrlLicenseNotification:
+    def GET(self, lid):
+        SignatureHooker.checkSignature(self)
+        params = web.input()
+        retval = mdb.get_noti(lid)
+        return formator.json_string({'body':retval})
+    def POST(self, lid):
+        SignatureHooker.checkSignature(self)
+        params = web.input(ison='', pkey='')
+        retval = mdb.set_noti(lid, (1 if params.ison=='1' else 0), params.pkey)
+        return formator.json_string(retval)
+    def PUT(self, lid):
+        params = web.input(pkey='', level='1', title='', body='', url='')
+        indata = dict(level=params.level, title=params.title, body=params.body, url=params.url)
+        retval = mdb.push_message(lid, params.pkey, indata)
+        return formator.json_string(retval)
+
 class CtrlMessageNews:
     def GET(self):
         SignatureHooker.checkSignature(self)
@@ -428,7 +446,7 @@ class CtrlReachablePort:
         retval = {}
         if params.tg:
             ipport = params.tg.split(":")
-            if len(ipport) == 2 and web.validipaddr(ipport[0]) and web.validipport(ipport[1]):
+            if len(ipport) == 2 and web.validipport(ipport[1]):
                 if not utils.check_port(ipport[0], ipport[1]):
                     retval = {'errmsg': 'Unreachable'}
             else:
