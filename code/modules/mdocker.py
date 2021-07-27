@@ -621,7 +621,7 @@ def dict_image(iobj, tag='', parents=[], all_container=[]):
     else:
         retval = {}
     for c in all_container:
-        if isinstance(c, dict) and isinstance(iobj, dict) and retval['name'].replace(':latest','') == c['Image'].replace(':latest',''):
+        if isinstance(c, dict) and isinstance(iobj, dict) and (retval['name'].replace(':latest','') == c['Image'].replace(':latest','') or retval['id']==c['ImageID']):
             retval['Containers'].append(dict_container(c))
             retval['Used'] += 1
             if c['State']=='running':

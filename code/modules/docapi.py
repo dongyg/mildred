@@ -68,12 +68,6 @@ class CtrlIndex:
             dockinfo = mdocker.get_dkinfo()
             dcmpinfo = mcompose.compose_info()
             render = variant.get_render('index')
-            import qrcode, base64
-            from io import BytesIO
-            img = qrcode.make(realhome)
-            buffered = BytesIO()
-            img.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
             pagedata = {
                 "realhome": realhome,
                 "req_uri": req_uri,
@@ -81,7 +75,7 @@ class CtrlIndex:
                 "dcok": dcmpinfo[0].find('not found')<0,
                 "stok": os.path.isdir('../storage'),
                 "ssok": not realhome.startswith('https://') and not web.validipaddr(web.ctx.get('host')),
-                "imgd": img_str,
+                "imgr": "https://dom.aifetel.cc/domapi/qrcode?sid=%s&url=%s"%(dockinfo['ID'],realhome)
             }
             return render(pagedata)
         else:

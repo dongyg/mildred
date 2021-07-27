@@ -3,6 +3,7 @@ services:
   mildred:
     image: dongyg/mildred
     container_name: mildred
+    restart: unless-stopped
     ports:
       - 8017:8017
     volumes:
