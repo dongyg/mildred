@@ -15,10 +15,9 @@ RUN cd /tmp/ && \
     chmod +x /usr/local/bin/docker-compose && \
     ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-RUN pip install --no-cache-dir web.py==0.51 pyyaml==5.3.1 rsa==4.0 docker==4.2.0;
-
+RUN pip install --no-cache-dir web.py pyyaml rsa docker==4.2.0;
 # RUN pip install --no-cache-dir web.py==0.51 pyyaml==5.3.1 rsa==4.0 docker==4.2.0 docker-compose==1.26.0;
+
 ENV RUNNING_INSIDE_CONTAINER 1
 # COPY code /mildred/code/
 WORKDIR /mildred/code
-
