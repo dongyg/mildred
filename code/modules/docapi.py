@@ -644,17 +644,14 @@ class CtrlComposeShell:
         if not cpobj:
             return 'No such compose file'
         fpath = utils.prefixStorageDir(cpobj.FILEPATH) if not os.path.isabs(cpobj.FILEPATH) else cpobj.FILEPATH
-        if os.access(fpath, os.X_OK):
-            retval = mcompose.iterateShellCall(fpath)
+        if fpath.lower().endswith('.py'):
+            retval = mcompose.iterateShellCall('python '+fpath)
+        elif fpath.lower().endswith('.sh'):
+            retval = mcompose.iterateShellCall('bash '+fpath)
+        elif fpath.lower().endswith('.js'):
+            retval = mcompose.iterateShellCall('node '+fpath)
         else:
-            if fpath.lower().endswith('.py'):
-                retval = mcompose.iterateShellCall('python '+fpath)
-            elif fpath.lower().endswith('.sh'):
-                retval = mcompose.iterateShellCall('bash '+fpath)
-            elif fpath.lower().endswith('.js'):
-                retval = mcompose.iterateShellCall('node '+fpath)
-            else:
-                retval = mcompose.iterateShellCall(fpath)
+            retval = mcompose.iterateShellCall(fpath)
         web.header('Content-type','application/octet-stream')
         if needAddChunkedHeader():
             web.header('Transfer-Encoding','chunked')
