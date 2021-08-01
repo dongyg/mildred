@@ -39,7 +39,7 @@ $def with (pagedata)
   <div class="row" style="text-align: center;">
     <p>Scan the QR, or input url: <span>$pagedata['realhome']</span></p>
     $if pagedata.get('dockinfo',{}).get('errmsg'):
-      <p style="color:red;">pagedata.get('dockinfo',{}).get('errmsg')</p>
+      <p style="color:red;">$pagedata.get('dockinfo',{}).get('errmsg')</p>
     $elif pagedata.get('ssok'):
       <p style="color:red;">Warning: HTTPS connection is required.</p>
     $elif pagedata['realhome'].startswith('http:'):
