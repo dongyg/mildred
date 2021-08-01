@@ -69,6 +69,7 @@ class CtrlIndex:
             dcmpinfo = mcompose.compose_info()
             render = variant.get_render('index')
             pagedata = {
+                "dockinfo": dockinfo,
                 "realhome": realhome,
                 "req_uri": req_uri,
                 "dkok": "errmsg" not in dockinfo,
