@@ -124,9 +124,9 @@ def inspect_container(cname):
     try:
         cobj = dclient.containers.get(cname)
         cdct = get_dct_container(cname)
-        nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings'], ['IPAddress', 'Gateway']).items()],
+        nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings'], ['IPAddress', 'Gateway']).items()]
         if (not nets or not nets[0] or not nets[0][1] ) and cobj.attrs['HostConfig']['NetworkMode'] in cobj.attrs['NetworkSettings']['Networks']:
-            nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings']['Networks'][ cobj.attrs['HostConfig']['NetworkMode'] ], ['IPAddress', 'Gateway']).items()],
+            nets = [(key, val) for key, val in utils.copy_dict(cobj.attrs['NetworkSettings']['Networks'][ cobj.attrs['HostConfig']['NetworkMode'] ], ['IPAddress', 'Gateway']).items()]
         return {"body":{
             'Cmd': cdct['Command'],
             'Env': [x.split('=') for x in cobj.attrs['Config']['Env']],

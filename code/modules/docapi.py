@@ -75,8 +75,9 @@ class CtrlIndex:
                 "dcok": dcmpinfo[0].find('not found')<0,
                 "stok": os.path.isdir('../storage'),
                 "ssok": not realhome.startswith('https://') and not web.validipaddr(web.ctx.get('host')),
-                "imgr": "https://dom.aifetel.cc/domapi/qrcode?sid=%s&url=%s"%(dockinfo['ID'],realhome)
             }
+            if 'ID' in dockinfo:
+                pagedata['imgr'] = "https://dom.aifetel.cc/domapi/qrcode?sid=%s&url=%s"%(dockinfo['ID'],realhome)
             return render(pagedata)
         else:
             return web.notfound()
