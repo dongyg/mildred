@@ -13,7 +13,7 @@ def get_dkinfo():
     try:
         dclient.ping()
     except Exception as e:
-        return {"errmsg":"Failed to communicate with docker"}
+        return {"errmsg": str(e)}
     dkinfo = dclient.info()
     cpu_usage, mem_usage = get_cm_usage()
     retval = {
