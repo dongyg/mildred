@@ -210,7 +210,7 @@ class CtrlServerStatSwitch:
     def POST(self):
         SignatureHooker.checkSignature(self)
         try:
-            dclient.ping()
+            mdocker.dclient.ping()
             mdb.set_syskey('ENABLE_STAT', 1)
             variant['enable_stat'] = '1'
             mdb.load_alerts()
