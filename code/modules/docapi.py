@@ -209,12 +209,17 @@ class CtrlServerInfo(SignatureHooker):
 class CtrlServerStatSwitch:
     def POST(self):
         SignatureHooker.checkSignature(self)
-        mdb.set_syskey('ENABLE_STAT', 1)
-        variant['enable_stat'] = '1'
-        mdb.load_alerts()
-        variant.deamon_thread = threading.Thread(target=mdocker.stat_daemon, args=(), daemon=True)
-        variant.deamon_thread.start()
-        return formator.json_string({})
+        try:
+            dclient.ping()
+            mdb.set_syskey('ENABLE_STAT', 1)
+            variant['enable_stat'] = '1'
+            mdb.load_alerts()
+            variant.deamon_thread = threading.Thread(target=mdocker.stat_daemon, args=(), daemon=True)
+            variant.deamon_thread.start()
+        except Exception as e:
+            return formator.json_string({"errmsg": str(e)})
+        else:
+            return formator.json_string({})
     def DELETE(self):
         SignatureHooker.checkSignature(self)
         mdb.set_syskey('ENABLE_STAT', 0)

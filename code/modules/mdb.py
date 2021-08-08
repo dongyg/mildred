@@ -148,6 +148,8 @@ def check_signature(lid, ts, nonce, sig):
     if not sig: return {'errmsg': 'Invalid signature'}
     if not ts: return {'errmsg': 'Invalid request'}
     pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
+    if not pempub: load_pubkeys()
+    pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
     if not pempub: return {'errmsg': 'No such license'}
     sig = utils.base64urlToBase64(sig)
     vdata = [lid, ts, nonce]
@@ -160,10 +162,27 @@ def check_signature(lid, ts, nonce, sig):
         if retval == 'SHA-1':
             return {}
         else:
-            return {'errmsg': 'Invalid signature'}
+            load_pubkeys()
+            pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
+            pubkey = rsa.PublicKey.load_pkcs1(pempub)
+            retval = rsa.verify(''.join(vdata).encode('utf8'), base64.b64decode(sig), pubkey)
+            if retval == 'SHA-1':
+                return {}
+            else:
+                return {'errmsg': 'Invalid signature'}
     except Exception as e:
-        traceback.print_exc()
-        return {'errmsg': 'Invalid signature'}
+        try:
+            load_pubkeys()
+            pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
+            pubkey = rsa.PublicKey.load_pkcs1(pempub)
+            retval = rsa.verify(''.join(vdata).encode('utf8'), base64.b64decode(sig), pubkey)
+            if retval == 'SHA-1':
+                return {}
+            else:
+                return {'errmsg': 'Invalid signature'}
+        except Exception as e:
+            traceback.print_exc()
+            return {'errmsg': 'Invalid signature'}
 
 def set_license_bind(lid, did, dname, sid, sname, surl, pexp, osname):
     if not dbsl: return {'errmsg': 'No database'}
@@ -423,7 +442,7 @@ def list_newmsg(lid, cname):
     if cname:
         swhere += " AND A.CNAME=$cname"
     retval = dbsl.select("DM_ALERTS A, DM_MESSAGE M",
-        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY",
+        what="A.ALID,A.CNAME,ALTYPE,ALLEVEL,MSGID,MSGSTAMP,ISREAD,ISPUSHED,MSGKEYWORD,MSGBODY,MSGURL",
         vars=locals(), where=swhere, order="M.MSGID desc").list()
     return retval
 
@@ -528,7 +547,6 @@ def push_message(lid, pkey, data):
     if not dbsl: return {'errmsg': 'No database'}
     lobj = web.config.vars.pubkeys.get(lid)
     if not lobj: return {'errmsg': 'License not exists'}
-    if lobj.get('push_expire',0)<=time.time(): return {'errmsg': 'License/Push service expired'}
     if not lobj.get('EXNOTIISON'): return {'errmsg': 'External notification is off'}
     if not pkey or (pkey and lobj.get('EXNOTIPASS')!=pkey): return {'errmsg': 'Require password to send external notification'}
     if not data.get('body'): return {'errmsg': 'body required'}
@@ -551,10 +569,13 @@ def push_message(lid, pkey, data):
             MSGBODY     = data.get('body',''),
             MSGURL      = data.get('url', '')
         )
-        retval = apush.pushNotification(lobj.get('LICENSEID',''), lobj.get('SERVERID',''), lobj.get('DEVICEID',''), data.get('title',''), data.get('body',''),
-            'domapp://message/%s?lid=%s'%(msgid,lid))
-        retval = formator.json_object(retval)
-        return retval
+        if lobj.get('push_expire',0)<=time.time():
+            return {'errmsg': 'License/Push service expired'}
+        else:
+            retval = apush.pushNotification(lobj.get('LICENSEID',''), lobj.get('SERVERID',''), lobj.get('DEVICEID',''), data.get('title',''), data.get('body',''),
+                'domapp://message/%s?lid=%s'%(msgid,lid))
+            retval = formator.json_object(retval)
+            return retval
     except Exception as e:
         return {'errmsg': str(e)}
 
