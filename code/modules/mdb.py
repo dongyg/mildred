@@ -148,8 +148,9 @@ def check_signature(lid, ts, nonce, sig):
     if not sig: return {'errmsg': 'Invalid signature'}
     if not ts: return {'errmsg': 'Invalid request'}
     pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
-    if not pempub: load_pubkeys()
-    pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
+    if not pempub:
+        load_pubkeys()
+        pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
     if not pempub: return {'errmsg': 'No such license'}
     sig = utils.base64urlToBase64(sig)
     vdata = [lid, ts, nonce]
@@ -546,7 +547,13 @@ def set_noti(lid, ison, pkey):
 def push_message(lid, pkey, data):
     if not dbsl: return {'errmsg': 'No database'}
     lobj = web.config.vars.pubkeys.get(lid)
+    if not lobj:
+        load_pubkeys()
+        lobj = web.config.vars.pubkeys.get(lid)
     if not lobj: return {'errmsg': 'License not exists'}
+    if not lobj.get('EXNOTIISON'):
+        load_pubkeys()
+        lobj = web.config.vars.pubkeys.get(lid)
     if not lobj.get('EXNOTIISON'): return {'errmsg': 'External notification is off'}
     if not pkey or (pkey and lobj.get('EXNOTIPASS')!=pkey): return {'errmsg': 'Require password to send external notification'}
     if not data.get('body'): return {'errmsg': 'body required'}
@@ -569,6 +576,9 @@ def push_message(lid, pkey, data):
             MSGBODY     = data.get('body',''),
             MSGURL      = data.get('url', '')
         )
+        if lobj.get('push_expire',0)<=time.time():
+            load_pubkeys()
+            lobj = web.config.vars.pubkeys.get(lid)
         if lobj.get('push_expire',0)<=time.time():
             return {'errmsg': 'License/Push service expired'}
         else:

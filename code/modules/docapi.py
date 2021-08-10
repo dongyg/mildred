@@ -81,7 +81,7 @@ class CtrlIndex:
                 pagedata['imgr'] = "https://dom.aifetel.cc/domapi/qrcode?sid=%s&url=%s"%(dockinfo['ID'],realhome)
             return render(pagedata)
         else:
-            return web.notfound()
+            return 'Mildred Add-on Version: %s'%mdb.get_syskey('VERSION', '1')
 
 
 class SignatureHooker:
@@ -148,8 +148,13 @@ class CtrlServerBind:
 class CtrlServerSwitchBind:
     def POST(self):
         SignatureHooker.checkSignature(self)
-        mdb.set_syskey('ENABLE_BIND', 1)
-        return formator.json_string({})
+        retval = {}
+        try:
+            mdocker.dclient.ping()
+            mdb.set_syskey('ENABLE_BIND', 1)
+        except Exception as e:
+            retval['errmsg'] = 'Can not turn on binding.\n'+str(e)
+        return formator.json_string(retval)
     def DELETE(self):
         SignatureHooker.checkSignature(self)
         mdb.set_syskey('ENABLE_BIND', 0)

@@ -295,6 +295,7 @@ def stat_container(cname):
     except Exception as e:
         traceback.print_exc()
         utils.outMessage(cname)
+        variant.staters.pop(cname)
 
 def stat_transfer(cname, sdat):
     rdat = None
