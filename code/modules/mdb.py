@@ -151,7 +151,7 @@ def check_signature(lid, ts, nonce, sig):
     if not pempub:
         load_pubkeys()
         pempub = web.config.vars.pubkeys.get(lid,{}).get('PUBKEY','')
-    if not pempub: return {'errmsg': 'No such license'}
+    if not pempub: return {'errmsg': 'No such client'}
     sig = utils.base64urlToBase64(sig)
     vdata = [lid, ts, nonce]
     vdata.sort()
@@ -341,7 +341,7 @@ def list_alert(lid, cname):
     return retval
 
 def chk_alert(params):
-    if not params.lid: return {'errmsg': 'Invalid License'}
+    if not params.lid: return {'errmsg': 'Invalid Client'}
     if not params.cname: return {'errmsg': 'Invalid Container'}
     if params.cname != '--sys--' and not mdocker.exists_container(params.cname): return {'errmsg': 'Invalid Container'}
     if not params.altype.isdigit(): return {'errmsg': 'Invalid Target'}
@@ -528,7 +528,7 @@ def get_noti(lid):
 def set_noti(lid, ison, pkey):
     if not dbsl: return {'errmsg': 'No database'}
     lobj = web.config.vars.pubkeys.get(lid)
-    if not lobj: return {'errmsg': 'License not exists'}
+    if not lobj: return {'errmsg': 'No such client'}
     if lobj.get('push_expire',0)<=time.time(): return {'errmsg': 'License/Push service expired'}
     t = dbsl.transaction()
     try:

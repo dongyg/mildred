@@ -281,20 +281,17 @@ def stat_container(cname):
     try:
         return next(ster)
     except StopIteration as e:
-        traceback.print_exc()
-        utils.outMessage(cname)
+        utils.outMessage('Stat StopIteration: %s'%cname)
         if container_exists_byname(cname):
             ster = dclient.api.stats(cname, decode=True)
             variant.staters[cname] = ster
         else:
             variant.staters.pop(cname)
     except docker.errors.NotFound as e:
-        traceback.print_exc()
-        utils.outMessage(cname)
+        utils.outMessage('Stat NotFound: %s'%cname)
         variant.staters.pop(cname)
     except Exception as e:
-        traceback.print_exc()
-        utils.outMessage(cname)
+        utils.outMessage('Stat Exception: %s'%cname)
         variant.staters.pop(cname)
 
 def stat_transfer(cname, sdat):
