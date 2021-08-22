@@ -1,10 +1,12 @@
 # Mildred
 
-Mildred is a tool for managing your docker servers from your iOS devices. It includes an [iOS App](https://apps.apple.com/us/app/id1522800022) and a server-side.
+Mildred is an iOS App [iOS App](https://apps.apple.com/us/app/id1522800022) including SSH Client, SSH Tunneling, Docker Client.
 
-## Why a server-side
+This is the add-on for Mildred App. This add-on provides some additional features such as statistics history, monitor cpu usages, monitor memory usages, monitor logs, push notification api and more.
 
-The Mildred App connects your docker server via a server-side web app instead of the Docker REST API. The server-side web app can provide more features such as docker-compose, statistics history, logs, alerts, notifications and more.
+Furthmore, the add-on provides HTTP Restful APIs which allows the App connect to your server via HTTP instead of other ways.
+
+>Notice: This README is for HTTP connection.
 
 ## Installation
 
@@ -15,19 +17,13 @@ git clone https://github.com/dongyg/mildred.git
 cd mildred && docker-compose up -d
 ```
 
+Alternatively you can install this add-on in the Mildred App setting page.
+
 ## Configuration
 
->You can add any volumes setting to the YAML file as you want.
+You can add any volumes setting to the docker-compose.yaml file as you want.
 
-### docker-compose.yaml
-
-Use the built image [`dongyg/mildred`](https://hub.docker.com/r/dongyg/mildred) which is automatically built from `Dockerfile`.
-
-### docker-compose_mildred.yaml
-
-If you want to build the docker image by yourself, you can create your own `docker-compose.yaml` based-on this file. Certainly, you can also modify the `Dockerfile` as you want.
-
-### binding
+## Binding
 
 Binding will be unavailable after the first device bound. You could turn it on in the app or execute the command below on your docker server.
 
@@ -35,8 +31,7 @@ Binding will be unavailable after the first device bound. You could turn it on i
 docker exec -it mildred python configuration.py --binding-on
 ```
 
-
-## External Push Notification
+## Push Notification API
 
 This is a Restful API which you can use it to send a push notification to your device. You can enable this feature in the App.
 
@@ -126,33 +121,4 @@ server {
     proxy_set_header            X-Forwarded-Port  $server_port;
   }
 }
-```
-
-
-## code-server
-
-The [iOS App](https://apps.apple.com/us/app/id1522800022) also supports a connection to your self-hosted [`code-server`](https://github.com/cdr/code-server).
-
-There are a couple of choices here: [codercom/code-server](https://hub.docker.com/r/codercom/code-server), [linuxserver/code-server](https://hub.docker.com/r/linuxserver/code-server)
-
-Here is a snippet for using [linuxserver/code-server](https://hub.docker.com/r/linuxserver/code-server).
-
-```yaml
-version: "2.1"
-services:
-  code-server:
-    image: linuxserver/code-server
-    container_name: code-server
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - PASSWORD=password #optional
-      - SUDO_PASSWORD=password #optional
-      - PROXY_DOMAIN=code-server.my.domain #optional
-    volumes:
-      - /path/to/appdata/config:/config
-    ports:
-      - 8443:8443
-    restart: unless-stopped
 ```
