@@ -9,7 +9,8 @@ import ssl
 
 context = ssl._create_unverified_context()
 
-ATXT_HOST = 'https://dom.aifetel.cc'
+# ATXT_HOST = 'https://dom.aifetel.cc'
+ATXT_HOST = 'http://192.168.0.27:8087'
 
 def caclSignature(secretkey, timestamp, nonce):
     secretkey.extend([timestamp, nonce])
