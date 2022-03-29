@@ -9,8 +9,9 @@ import ssl
 
 context = ssl._create_unverified_context()
 
-# ATXT_HOST = 'https://dom.aifetel.cc'
-ATXT_HOST = 'http://192.168.0.27:8087'
+ATXT_HOST = 'https://dom.aifetel.cc'
+# ATXT_HOST = 'http://192.168.0.27:8087'
+headers = {'user-agent': 'Mildred/3.3.3 (cc.aifetel.mildred; build:3.3.3; Linux) MildredServer/3.3.3', 'Accept-Encoding': 'gzip'}
 
 def caclSignature(secretkey, timestamp, nonce):
     secretkey.extend([timestamp, nonce])
@@ -24,11 +25,10 @@ def pushNotification(lid, sid, did, title, content, url):
     signature = caclSignature([sid,did], timestamp, nonce)
     params = {"ts":timestamp, "nc":nonce, "sn":signature, "sync":'', "tl":title, "ct":content, "url":url}
     data = urllib.parse.urlencode(params).encode("utf-8")
-    req = urllib.request.Request("%s/domapi/lic/%s/push"%(ATXT_HOST,lid), data=data)
+    req = urllib.request.Request("%s/domapi/lic/%s/push"%(ATXT_HOST,lid), data=data, headers=headers)
     if ATXT_HOST.lower().startswith('https'):
         res = urllib.request.urlopen(req, context=context)
     else:
         res = urllib.request.urlopen(req)
     retval = res.read().decode("utf-8")
     return retval
-
