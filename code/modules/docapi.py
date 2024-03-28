@@ -59,7 +59,7 @@ app_api = web.application(urls_rest, locals())
 class CtrlIndex:
     def GET(self):
         if mdb.get_syskey('ENABLE_BIND', '0') == '1':
-            ipaddress = web.ctx.env.get('HTTP_X_REAL_IP') or web.ctx.env.get('REMOTE_ADDR') or 'Unknown'
+            ipaddress = get_client_ip()
             protocol = web.ctx.get('protocol') or 'http'
             realhome = web.ctx.get('realhome') or 'unknown'
             if web.ctx.env.get('HTTP_X_FORWARDED_PROTO') and web.ctx.env['HTTP_X_FORWARDED_PROTO']!=protocol:

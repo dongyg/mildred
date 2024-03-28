@@ -36,5 +36,15 @@ render = web.template.render('views', cache=not web.config.debug, globals=render
 def get_render(inpath, view=render):
     return getattr(view, inpath) or web.notfound
 
+def get_client_ip():
+    ipaddress = 'Unknown'
+    if not web.ctx.env:
+        return ipaddress
+    ipaddress = web.ctx.env.get('HTTP_X_FORWARDED_FOR')
+    ipaddress = ipaddress.split(',')[0] if ipaddress else ''
+    if ipaddress:
+        return ipaddress
+    ipaddress = web.ctx.env.get('HTTP_X_REAL_IP', web.ctx.env.get('REMOTE_ADDR', 'Unknown'))
+
 web.config.vars['get_render'] = get_render
 
